@@ -1,24 +1,3 @@
-import streamlit as st
-import numpy as np
-import pandas as pd
-import joblib
-
-# Load the model
-model = joblib.load('saved_model.pkl')
-
-st.title('🚢 Titanic Survival Prediction App')
-
-st.markdown('### Enter passenger details:')
-
-# Inputs
-pclass = st.selectbox('Passenger Class (Pclass)', [1, 2, 3])
-sex = st.selectbox('Sex', ['male', 'female'])
-age = st.number_input('Age', min_value=0, max_value=100, value=25)
-sibsp = st.number_input('Siblings/Spouses aboard (SibSp)', min_value=0, max_value=10, value=0)
-parch = st.number_input('Parents/Children aboard (Parch)', min_value=0, max_value=10, value=0)
-fare = st.number_input('Fare', min_value=0.0, value=32.0)
-embarked = st.selectbox('Port of Embarkation (Embarked)', ['C', 'Q', 'S'])
-
 if st.button('Predict'):
     # Manual One-hot encoding
     sex_female = 1 if sex == 'female' else 0
@@ -41,6 +20,9 @@ if st.button('Predict'):
         'Embarked_Q': [embarked_Q],
         'Embarked_S': [embarked_S]
     })
+
+    # ❗ Convert input_df to numpy array because model expects array
+    input_df = input_df.values
 
     # Predict
     prediction = model.predict(input_df)[0]

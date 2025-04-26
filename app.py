@@ -1,3 +1,4 @@
+import streamlit as st
 if st.button('Predict'):
     # Manual One-hot encoding
     sex_female = 1 if sex == 'female' else 0

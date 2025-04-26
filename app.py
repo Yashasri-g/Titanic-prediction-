@@ -1,63 +1,46 @@
-import streamlit as st
+import pandas as pd
 import joblib
-import numpy as np
+import streamlit as st
 
-# Load the saved model
+# Load model
 model = joblib.load('saved_model.pkl')
 
-# Streamlit page configuration
-st.set_page_config(page_title="Titanic Survival Prediction 🚢", layout="centered")
+# Columns used in training
+input_features = ['Pclass', 'Age', 'Fare', 'SibSp', 'Parch', 
+                  'Sex_female', 'Sex_male', 
+                  'Embarked_C', 'Embarked_Q', 'Embarked_S']
 
-# Title
-st.title("🚢 Titanic Survival Prediction App")
-st.markdown("Enter the passenger's details below to predict their survival chances.")
+# Streamlit UI
+st.title('Titanic Survival Prediction')
 
-# Sidebar for input fields
-st.sidebar.header("📝 Passenger Details")
+Pclass = st.selectbox('Passenger Class (Pclass)', [1, 2, 3])
+Age = st.slider('Age', 0, 80, 25)
+Fare = st.number_input('Fare', 0, 500, 50)
+SibSp = st.number_input('Siblings/Spouses Aboard', 0, 10, 0)
+Parch = st.number_input('Parents/Children Aboard', 0, 10, 0)
+Sex = st.selectbox('Sex', ['male', 'female'])
+Embarked = st.selectbox('Embarked Port', ['C', 'Q', 'S'])
 
-# Input Fields
-pclass = st.sidebar.selectbox('Passenger Class (Pclass)', [1, 2, 3])
+# Preprocess user input
+input_data = {
+    'Pclass': Pclass,
+    'Age': Age,
+    'Fare': Fare,
+    'SibSp': SibSp,
+    'Parch': Parch,
+    'Sex_female': 1 if Sex == 'female' else 0,
+    'Sex_male': 1 if Sex == 'male' else 0,
+    'Embarked_C': 1 if Embarked == 'C' else 0,
+    'Embarked_Q': 1 if Embarked == 'Q' else 0,
+    'Embarked_S': 1 if Embarked == 'S' else 0
+}
 
-sex = st.sidebar.selectbox('Sex', ['Male', 'Female'])
+input_df = pd.DataFrame([input_data])
 
-age = st.sidebar.slider('Age', 0, 100, 25)
-
-sibsp = st.sidebar.number_input('Number of Siblings/Spouses Aboard (SibSp)', min_value=0, max_value=10, value=0)
-
-parch = st.sidebar.number_input('Number of Parents/Children Aboard (Parch)', min_value=0, max_value=10, value=0)
-
-fare = st.sidebar.number_input('Fare Paid ($)', min_value=0.0, max_value=600.0, value=50.0)
-
-embarked = st.sidebar.selectbox('Port of Embarkation', ['C', 'Q', 'S'])
-
-# Prepare input for the model
-def preprocess_input(pclass, sex, age, sibsp, parch, fare, embarked):
-    sex_female = 1 if sex == 'Female' else 0
-    sex_male = 1 if sex == 'Male' else 0
-
-    embarked_C = 1 if embarked == 'C' else 0
-    embarked_Q = 1 if embarked == 'Q' else 0
-    embarked_S = 1 if embarked == 'S' else 0
-
-    input_data = np.array([[pclass, sex_female, sex_male, age, sibsp, parch, fare, embarked_C, embarked_Q, embarked_S]])
-    return input_data
-
-# Predict button
-if st.sidebar.button('Predict'):
-    input_data = preprocess_input(pclass, sex, age, sibsp, parch, fare, embarked)
-    prediction = model.predict(input_data)
-    prediction_proba = model.predict_proba(input_data)
-
-    st.subheader("🎯 Prediction Result")
-    if prediction[0] == 1:
-        st.success("🥳 The passenger **would survive**!")
+# Prediction
+if st.button('Predict'):
+    prediction = model.predict(input_df)[0]
+    if prediction == 1:
+        st.success('🎯 Passenger Survived!')
     else:
-        st.error("😢 The passenger **would not survive**.")
-
-    st.subheader("📊 Prediction Probabilities")
-    st.write(f"**Survival Probability:** {prediction_proba[0][1]*100:.2f}%")
-    st.write(f"**Death Probability:** {prediction_proba[0][0]*100:.2f}%")
-
-# Footer
-st.markdown("---")
-st.caption("Made with ❤️ using Streamlit")
+        st.error('💀 Passenger Did Not Survive.')
